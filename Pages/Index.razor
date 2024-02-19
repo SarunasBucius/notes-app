@@ -1,0 +1,28 @@
+﻿@page "/"
+@using NotesApp.Data
+@inject NotesService NotesService
+
+<PageTitle>Notes app</PageTitle>
+
+<h1>Welcome to Notes app!</h1>
+
+<p>Here you can store and view notes.</p>
+
+<button class="btn btn-primary" @onclick="ShowRandomNote">Show random note</button>
+<br>
+<br>
+@if (note != null)
+{
+    <div class="note"><p>@note.Message</p></div>
+
+}
+
+@code {
+    private Note? note;
+
+    private void ShowRandomNote()
+    {
+        note = NotesService.GetRandomNote(note);
+    }
+}
+

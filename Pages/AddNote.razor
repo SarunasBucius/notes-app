@@ -1,0 +1,39 @@
+﻿@using Microsoft.AspNetCore.Components.Forms;
+@using NotesApp.Data
+@inject NotesService NotesService
+
+@page "/add-note"
+
+<PageTitle>Add note</PageTitle>
+
+<h1>Add note</h1>
+
+<EditForm Model=@formData OnSubmit=@Submit>
+    <div class="add-note-input-containter">
+        <p>Note</p>
+        <InputTextArea class="add-note-input-width" @bind-Value=formData.Message />
+    </div>
+    <div class="add-note-input-containter">
+        <p>Source</p> 
+        <InputText class="add-note-input-width" @bind-Value=formData.Source />
+    </div>
+    <div class="add-note-input-containter">
+        <p>Tags</p> 
+        <InputText @bind-Value=formData.Tags/>
+    </div>
+    <input type="submit" value="Submit" class="btn btn-primary" />
+</EditForm>
+
+
+@code {
+    Note formData = new Note();
+
+    private void Submit()
+    {
+        if (!string.IsNullOrEmpty(formData.Message))
+        {
+            NotesService.AddNote(formData);
+            formData = new();
+        }
+    }
+}

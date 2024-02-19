@@ -1,0 +1,115 @@
+﻿@page "/show-notes"
+@inject NotesService NotesService
+@using NotesApp.Data
+
+<PageTitle>Show Notes</PageTitle>
+
+<h1>Show Notes</h1>
+
+@if (notes == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    @foreach (var note in notes)
+    {
+        <div class="note">
+            <p>@note.Message</p>
+            @if (!string.IsNullOrEmpty(note.Source))
+            {
+                <p>
+                    Source:
+                    @if (note.Source.StartsWith("http"))
+                    {
+                        <a href="@note.Source" target="_blank">@note.Source</a>
+                    }
+                    else
+                    {
+                        @note.Source
+                    }
+                </p>
+            }
+            @if (!string.IsNullOrEmpty(note.Tags))
+            {
+                <p>Tags: @note.Tags</p>
+            }
+            <Icon Name="IconName.PencilSquare" class="clickable-note-icons" @onclick="() => OnShowModalClick(note)"/>
+            <Icon Name="IconName.Trash" class="clickable-note-icons" @onclick="() => RemoveNote(note)" />
+        </div>
+    }
+
+        <Modal @ref="modal" Title="Edit note">
+            <BodyTemplate>
+            @if(clonedNoteToEdit != null)
+            {
+                <EditForm Model=@clonedNoteToEdit>
+                    <div class="add-note-input-containter">
+                        <p>Note</p>
+                        <InputTextArea class="add-note-input-width" @bind-Value=clonedNoteToEdit.Message />
+                    </div>
+                    <div class="add-note-input-containter">
+                        <p>Source</p>
+                        <InputText class="add-note-input-width" @bind-Value=clonedNoteToEdit.Source />
+                    </div>
+                    <div class="add-note-input-containter">
+                        <p>Tags</p>
+                        <InputText @bind-Value=clonedNoteToEdit.Tags />
+                    </div>
+                </EditForm>
+            }
+            </BodyTemplate>
+            <FooterTemplate>
+                <Button Color="ButtonColor.Secondary" @onclick=OnHideModalClick>Close</Button>
+                <Button Color="ButtonColor.Primary" @onclick=SaveChanges>Save changes</Button>
+            </FooterTemplate>
+        </Modal>
+    
+}
+
+@code {
+    private List<Note>? notes;
+    private Modal modal = default!;
+    private Note? noteToEdit;
+    private Note? clonedNoteToEdit;
+
+    protected override async Task OnInitializedAsync()
+    {
+        notes = await NotesService.GetNotesAsync();
+    }
+
+    private void RemoveNote(Note note)
+    {
+        NotesService.RemoveNote(note);
+        StateHasChanged();
+    }
+
+    private async void SaveChanges()
+    {
+        if (noteToEdit == null || clonedNoteToEdit == null)
+        {
+            return;
+        }
+        noteToEdit.Message = clonedNoteToEdit.Message;
+        noteToEdit.Source = clonedNoteToEdit.Source; 
+        noteToEdit.Tags = clonedNoteToEdit.Tags;
+
+        NotesService.UpdateStoredNotes();
+
+        await OnHideModalClick();
+    }
+
+    private async Task OnShowModalClick(Note note)
+    {
+        noteToEdit = note;
+        clonedNoteToEdit = note.SimpleClone();
+        await modal.ShowAsync();
+    }
+
+    private async Task OnHideModalClick()
+    {
+        noteToEdit = null;
+        clonedNoteToEdit = null;
+        await modal.HideAsync();
+    }
+}
